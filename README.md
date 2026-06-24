@@ -2,6 +2,9 @@
 
 
 Arsitektur Editor Biner RenderWare Performa Tinggi dengan Proteksi Corrupt & Auto-Replace Duplikat untuk modding tekstur GTA San Andreas langsung di browser.
+
+
+
 https://img.shields.io/badge/version-4.0-orange
 https://img.shields.io/badge/license-MIT-blue
 https://img.shields.io/badge/platform-Web-brightgreen
