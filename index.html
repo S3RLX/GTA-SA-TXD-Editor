@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTA SA TXD Editor Ultimate Suite (v4.0)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#030712] text-slate-100 min-h-screen flex flex-col font-sans antialiased overflow-x-hidden" id="dropZone">
+
+    <!-- Header Utama -->
+    <header class="bg-[#090d16]/90 backdrop-blur-md border-b border-slate-800/60 sticky top-0 z-40 px-6 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-4 w-full lg:w-auto">
+            <div class="bg-gradient-to-tr from-orange-600 to-violet-600 p-2.5 rounded-xl text-white shadow-lg shadow-orange-500/10">
+                <i data-lucide="layers" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-orange-500 bg-clip-text text-transparent">GTA SA TXD Editor</h1>
+                    <span class="bg-gradient-to-r from-orange-500/20 to-violet-500/20 text-orange-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-orange-500/20">ULTIMATE v4.0</span>
+                </div>
+                <p class="text-xs text-slate-400">Arsitektur Editor Biner RenderWare Performa Tinggi dengan Proteksi Corrupt & Auto-Replace Duplikat</p>
+            </div>
+        </div>
+
+        <!-- Tombol Aksi Global -->
+        <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-end">
+            <!-- Info Estimasi Memori TXD -->
+            <div id="memoryEstimator" class="hidden bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-right">
+                <div class="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Estimasi Ukuran TXD</div>
+                <div id="estimatedSizeText" class="text-xs font-mono font-bold text-orange-400">0.00 KB</div>
+            </div>
+
+            <!-- Input Muat Berkas TXD -->
+            <label for="txdFileInput" class="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-[#101726] hover:bg-[#1b263b] border border-slate-800 hover:border-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-200 text-xs active:scale-95">
+                <i data-lucide="folder-open" class="w-4 h-4 text-orange-500"></i>
+                Buka Fail .TXD
+            </label>
+            <input type="file" id="txdFileInput" accept=".txd" class="hidden">
+
+            <!-- Gabung TXD Baru -->
+            <label id="mergeTxdLabel" for="mergeTxdInput" class="hidden flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-[#101726] hover:bg-[#1b263b] border border-slate-800 text-slate-200 font-bold px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-200 text-xs">
+                <i data-lucide="combine" class="w-4 h-4 text-violet-400"></i>
+                Gabung TXD
+            </label>
+            <input type="file" id="mergeTxdInput" accept=".txd" class="hidden">
+
+            <!-- Tombol Tambah Tekstur -->
+            <button id="addNewTextureBtn" disabled class="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-[#101726] hover:bg-[#1b263b] border border-slate-800 hover:border-slate-700 disabled:opacity-30 disabled:pointer-events-none text-slate-200 font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 text-xs">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i>
+                Tambah Tekstur
+            </button>
+            
+            <!-- Tombol Simpan (Memicu Modal Konfigurasi) -->
+            <button id="exportSettingsBtn" disabled class="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 disabled:opacity-30 disabled:pointer-events-none text-white font-bold px-5 py-2.5 rounded-xl transition-all duration-200 shadow-lg shadow-orange-500/10 hover:shadow-orange-500/20 text-xs active:scale-95">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                Simpan TXD...
+            </button>
+        </div>
+    </header>
+
+    <!-- Area Kerja Utama -->
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        
+        <!-- Sidebar Kiri: Pencarian & Daftar Tekstur -->
+        <section class="w-full lg:w-80 bg-[#070b13] border-r border-slate-900 flex flex-col flex-shrink-0">
+            <!-- Pencarian & Filter -->
+            <div class="p-4 border-b border-slate-900 space-y-3">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="searchBar" placeholder="Cari tekstur..." class="w-full bg-[#0d1321] border border-slate-800/80 rounded-xl py-2.5 pl-9 pr-4 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-all duration-150">
+                </div>
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                    <span id="textureCount">Total: 0 Item</span>
+                    <button id="exportAllBtn" disabled class="text-orange-500 hover:text-orange-400 font-bold flex items-center gap-1 disabled:opacity-40">
+                        <i data-lucide="folder-archive" class="w-3.5 h-3.5"></i> Ekspor Semua (.PNG)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Daftar Tekstur -->
+            <div id="textureList" class="flex-1 overflow-y-auto p-2 space-y-1.5 max-h-[220px] lg:max-h-none">
+                <!-- Tampilan kosong di awal -->
+                <div id="emptyState" class="text-center py-16 px-4">
+                    <div class="bg-slate-950 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 border border-slate-850">
+                        <i data-lucide="file-type-2" class="w-6 h-6 text-slate-600"></i>
+                    </div>
+                    <p class="text-xs text-slate-400 font-semibold">Tidak Ada Berkas Aktif</p>
+                    <p class="text-[10px] text-slate-600 mt-1">Impor berkas biner `.txd` game GTA San Andreas Anda atau seret file Anda langsung ke sini.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Area Kerja Kanan: Workspace Tabs -->
+        <section id="workspace" class="flex-1 flex flex-col bg-[#02050c] p-4 lg:p-6 overflow-y-auto hidden">
+            <!-- Navigasi Tab Kerja -->
+            <div class="flex border-b border-slate-800/80 gap-6 mb-6 overflow-x-auto text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <button id="tabEditBtn" class="pb-3 tab-active transition-colors flex items-center gap-1.5"><i data-lucide="pencil" class="w-4 h-4"></i> Editor & Preview</button>
+                <button id="tabPaletteBtn" class="pb-3 transition-colors flex items-center gap-1.5 hidden"><i data-lucide="palette" class="w-4 h-4"></i> Editor Palet (PAL8)</button>
+                <button id="tabBatchBtn" class="pb-3 transition-colors flex items-center gap-1.5"><i data-lucide="cpu" class="w-4 h-4"></i> Modding Batch Tool</button>
+                <button id="tabHexBtn" class="pb-3 transition-colors flex items-center gap-1.5"><i data-lucide="binary" class="w-4 h-4"></i> Hex & Binary Dump</button>
+            </div>
+
+            <!-- Tab 1: Editor & Preview Utama -->
+            <div id="tabEditContent" class="space-y-6">
+                <!-- Header Info Tekstur -->
+                <div class="bg-[#070b13] border border-slate-800/50 rounded-2xl p-5 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div class="space-y-1.5">
+                        <div class="flex items-center gap-2.5">
+                            <input type="text" id="activeTexNameInput" class="bg-transparent border-b border-transparent hover:border-slate-700 focus:border-orange-500 text-lg font-bold text-white focus:outline-none transition-all duration-150 py-0.5 w-60" value="-">
+                            <span id="activeTexIndexBadge" class="bg-slate-800 text-[10px] text-slate-400 font-mono px-2 py-0.5 rounded-md">#0</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-400">
+                            <span>Alpha Mask Name:</span>
+                            <input type="text" id="activeAlphaNameInput" class="bg-transparent border-b border-transparent hover:border-slate-700 focus:border-orange-500 text-slate-300 focus:outline-none transition-all py-0.2 w-40" value="-">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+                        <label for="importPngInput" class="flex-1 lg:flex-initial flex items-center justify-center gap-2 bg-[#0d1321] hover:bg-[#111827] border border-slate-800 text-slate-300 hover:text-white text-xs px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-150 active:scale-95">
+                            <i data-lucide="image-plus" class="w-4 h-4 text-amber-500"></i> Import/Ganti PNG
+                        </label>
+                        <input type="file" id="importPngInput" accept="image/png" class="hidden">
+
+                        <button id="deleteTextureBtn" class="flex-1 lg:flex-initial flex items-center justify-center gap-2 bg-red-950/20 hover:bg-red-950/50 border border-red-900/30 text-red-400 text-xs px-4 py-2.5 rounded-xl transition-all">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus
+                        </button>
+
+                        <button id="exportPngBtn" class="flex-1 lg:flex-initial flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-amber-500 text-white text-xs px-4 py-2.5 rounded-xl font-bold transition-all shadow-md active:scale-95">
+                            <i data-lucide="download" class="w-4 h-4"></i> Ekspor PNG
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview Grid -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    <!-- Area Tampilan Gambar -->
+                    <div class="xl:col-span-2 bg-[#070b13] border border-slate-800/50 rounded-2xl p-5 flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                                <i data-lucide="eye" class="w-4 h-4 text-orange-500"></i> Visual RenderWare Viewport
+                            </h3>
+                            <div class="flex gap-1.5 bg-slate-900 p-1 rounded-lg">
+                                <button id="bgDarkBtn" class="p-1.5 rounded-md hover:bg-slate-850" title="Background Gelap">
+                                    <div class="w-4 h-4 bg-[#030712] border border-slate-700 rounded-sm"></div>
+                                </button>
+                                <button id="bgCheckBtn" class="p-1.5 rounded-md hover:bg-slate-850" title="Background Transparan">
+                                    <div class="w-4 h-4 checkerboard border border-slate-700 rounded-sm"></div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Viewer Utama -->
+                        <div id="previewContainer" class="flex-1 min-h-[350px] max-h-[500px] rounded-xl flex items-center justify-center overflow-auto checkerboard p-6 border border-slate-800/60 transition-all">
+                            <img id="activeImg" src="" alt="Texture View" class="max-w-full max-h-[400px] object-contain drop-shadow-2xl">
+                        </div>
+
+                        <!-- Kontrol Preview Mipmap Dinamis -->
+                        <div class="mt-4 bg-slate-950/80 border border-slate-800/60 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="zoom-in" class="w-4 h-4 text-orange-500"></i>
+                                <span class="text-xs font-semibold">Tampilan Mipmap Level</span>
+                            </div>
+                            <div class="flex-1 w-full flex items-center gap-4">
+                                <input id="mipmapLevelSlider" type="range" min="0" max="0" value="0" class="w-full accent-orange-500 cursor-pointer">
+                                <span id="mipmapLevelLabel" class="text-xs font-mono font-bold bg-slate-900 px-3 py-1 rounded-md">Lvl 0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Properti & Stabilizer -->
+                    <div class="bg-[#070b13] border border-slate-800/50 rounded-2xl p-5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                                <i data-lucide="settings" class="w-4 h-4 text-orange-500"></i> Atribut & Keamanan
+                            </h3>
+                            <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 rounded-md border border-emerald-500/20">Aman</span>
+                        </div>
+
+                        <div class="space-y-3.5 divide-y divide-slate-850">
+                            <!-- Format Raster -->
+                            <div class="pt-1 flex flex-col gap-1.5">
+                                <span class="text-xs text-slate-400">D3D Raster Format</span>
+                                <select id="rasterFormatSelect" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-orange-500">
+                                    <option value="dxt1">DXT1 (Tanpa Alpha / Transparansi Kasar)</option>
+                                    <option value="dxt3">DXT3 (Transparansi Dengan Alpha Tajam)</option>
+                                    <option value="dxt5">DXT5 (Transparansi Dengan Alpha Halus)</option>
+                                    <option value="rgba8">RGBA 32-Bit (Uncompressed / Kualitas Maksimal)</option>
+                                    <option value="rgb8">RGB 24-Bit (Uncompressed / Tanpa Transparansi)</option>
+                                </select>
+                            </div>
+
+                            <!-- Dimensi Stabilizer -->
+                            <div class="pt-3.5 space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-slate-400">Resolusi (Piksel)</span>
+                                    <button id="forcePowerOfTwoBtn" class="text-[10px] text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1 transition">
+                                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Paksa Gandaan 2
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="number" id="techWidthInput" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                                    <input type="number" id="techHeightInput" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <!-- Mipmaps Generator -->
+                            <div class="pt-3.5 flex flex-col gap-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-slate-400 font-semibold">Tingkatan Mipmaps</span>
+                                    <button id="autoGenMipmapBtn" class="text-[10px] text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1 transition">
+                                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Auto-Generate
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-[10px] text-slate-500">Jumlah Mipmaps</span>
+                                        <input type="number" id="techMipmapsInput" min="1" max="8" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-[10px] text-slate-500">Bit Depth</span>
+                                        <select id="techDepthSelect" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                                            <option value="32">32-Bit</option>
+                                            <option value="24">24-Bit</option>
+                                            <option value="8">8-Bit (Palette Retro)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Wrap Mode -->
+                            <div class="pt-3.5 grid grid-cols-2 gap-3">
+                                <div class="flex flex-col gap-1.5">
+                                    <span class="text-[10px] text-slate-400">Wrapping Horisontal (S)</span>
+                                    <select id="wrapSSelect" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                                        <option value="1">Ulangi (Repeat)</option>
+                                        <option value="2">Cermin (Mirror)</option>
+                                        <option value="3">Jepit (Clamp)</option>
+                                    </select>
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <span class="text-[10px] text-slate-400">Wrapping Vertikal (T)</span>
+                                    <select id="wrapTSelect" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                                        <option value="1">Ulangi (Repeat)</option>
+                                        <option value="2">Cermin (Mirror)</option>
+                                        <option value="3">Jepit (Clamp)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="applyPropertiesBtn" class="w-full bg-gradient-to-r from-orange-600 to-violet-600 hover:from-orange-500 hover:to-violet-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg shadow-orange-600/10 active:scale-[0.98]">
+                            Terapkan Properti & Struktur
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Editor Palet Biner (PAL8) -->
+            <div id="tabPaletteContent" class="space-y-6 hidden">
+                <div class="bg-[#070b13] border border-slate-800/50 rounded-2xl p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i data-lucide="palette" class="w-5 h-5 text-orange-500"></i> Editor Warna Palet 256 Biner (PAL8)
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Tekstur terdeteksi berukuran 8-bit. Klik warna apa pun di bawah untuk mengubahnya secara biner.</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <input type="color" id="paletteColorPicker" class="w-10 h-10 bg-transparent border-0 cursor-pointer">
+                            <button id="savePaletteColorBtn" class="bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition">
+                                Simpan Warna Baru
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Palet Swatches Grid -->
+                    <div id="paletteSwatchesGrid" class="grid grid-cols-8 sm:grid-cols-16 md:grid-cols-32 gap-1.5 p-4 bg-slate-950 rounded-xl border border-slate-850 max-h-96 overflow-y-auto">
+                        <!-- Swatches akan di-render menggunakan JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Modding Batch Tool -->
+            <div id="tabBatchContent" class="space-y-6 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Batch Renamer -->
+                    <div class="bg-[#070b13] border border-slate-800/50 rounded-2xl p-5 space-y-4">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                            <i data-lucide="type" class="w-4 h-4 text-orange-500"></i> Pengubah Nama Massal (Batch Renamer)
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex flex-col gap-1.5">
+                                <span class="text-[10px] text-slate-500">Tambahkan Awalan (Prefix)</span>
+                                <input type="text" id="batchPrefix" placeholder="Contoh: vgarage_" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <span class="text-[10px] text-slate-500">Pencarian Teks</span>
+                                <input type="text" id="batchFind" placeholder="Cari teks nama..." class="bg-[#0d1321] border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <span class="text-[10px] text-slate-500">Ganti Teks Pencarian Dengan</span>
+                                <input type="text" id="batchReplace" placeholder="Ganti teks..." class="bg-[#0d1321] border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                            </div>
+                        </div>
+                        <button id="applyBatchRenameBtn" class="w-full bg-slate-800 hover:bg-slate-750 text-slate-100 font-bold py-2 rounded-xl text-xs transition border border-slate-700">
+                            Eksekusi Ganti Nama Massal
+                        </button>
+                    </div>
+
+                    <!-- Batch Downscaler (Optimasi Mobile) -->
+                    <div class="bg-[#070b13] border border-slate-800/50 rounded-2xl p-5 space-y-4">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                            <i data-lucide="minimize-2" class="w-4 h-4 text-violet-500"></i> Optimasi Resolusi Massal
+                        </h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Membantu menghemat penggunaan VRAM game GTA San Andreas Anda (sangat direkomendasikan jika ingin porting modifikasi ke GTA SA Android/Mobile).
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex flex-col gap-1.5">
+                                <span class="text-xs text-slate-400">Pilih Skala Downsize</span>
+                                <select id="batchScaleSelect" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none">
+                                    <option value="0.5">Turunkan 50% (Setengah Ukuran)</option>
+                                    <option value="0.25">Turunkan 75% (Perempat Ukuran)</option>
+                                    <option value="2">Naikkan 200% (Dua Kali Lipat Ukuran - Upscale)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="applyBatchScaleBtn" class="w-full bg-violet-950/40 hover:bg-violet-900/40 text-violet-400 font-bold py-2 rounded-xl text-xs transition border border-violet-800/30">
+                            Eksekusi Optimasi Massal
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Hex & Structural Inspector -->
+            <div id="tabHexContent" class="space-y-6 hidden">
+                <div class="bg-[#070b13] border border-slate-800/50 rounded-2xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                            <i data-lucide="binary" class="w-4 h-4 text-orange-500"></i> Hex Dump Viewer (Maksimal 1024 byte)
+                        </h3>
+                    </div>
+                    <div class="bg-[#030712] border border-slate-850 rounded-xl p-4 font-mono text-[11px] leading-relaxed text-slate-400 overflow-x-auto max-h-96 overflow-y-auto">
+                        <div id="hexDumpContainer" class="whitespace-pre">Memuat data hex...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Konfirmasi Penambahan Tekstur Baru -->
+    <div id="addTextureModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-[#070b13] border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="plus" class="w-5 h-5 text-emerald-500"></i> Tambah Tekstur Baru ke TXD
+            </h3>
+            
+            <div class="space-y-3">
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-xs text-slate-400">Nama Tekstur (Maks 32 karakter)</span>
+                    <input type="text" id="newTexName" placeholder="contoh: ban_mobil" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none">
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-xs text-slate-400">Nama Alpha (Opsional)</span>
+                    <input type="text" id="newTexAlpha" placeholder="contoh: ban_mobil_a" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none">
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-xs text-slate-400">Unggah Gambar (PNG)</span>
+                    <input type="file" id="newTexFileInput" accept="image/png" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2.5 pt-2">
+                <button id="closeModalBtn" class="bg-slate-800 hover:bg-slate-750 text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition">
+                    Batal
+                </button>
+                <button id="saveNewTextureBtn" class="bg-gradient-to-r from-orange-600 to-amber-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-md">
+                    Tambahkan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Konfigurasi & Ekspor TXD Baru -->
+    <div id="exportSettingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-[#070b13] border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="settings-2" class="w-5 h-5 text-orange-500"></i> Pengaturan Ekspor TXD
+            </h3>
+            
+            <div class="space-y-4">
+                <!-- Dukungan Alpha Channel -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs text-slate-400 font-bold uppercase tracking-wider">Metode Saluran Alpha</label>
+                    <select id="exportAlphaHandling" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none">
+                        <option value="keep">Pertahankan Saluran Asli (With Alpha jika ada)</option>
+                        <option value="force">Paksa Seluruh Tekstur With Alpha (Stabilizer)</option>
+                        <option value="strip">Hapus Semua Saluran Alpha (Without Alpha - Hemat VRAM)</option>
+                    </select>
+                </div>
+
+                <!-- Optimasi Target Platform -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs text-slate-400 font-bold uppercase tracking-wider">Optimasi Platform Target</label>
+                    <select id="exportPlatform" class="bg-[#0d1321] border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none">
+                        <option value="9">PC / Direct3D 9 (Standar Modding GTA SA)</option>
+                        <option value="8">Mobile / Android & PS2 (Kompatibilitas Legacy)</option>
+                    </select>
+                </div>
+
+                <!-- Generator Mipmaps Massal pada simpan -->
+                <div class="flex items-center justify-between p-2.5 bg-[#0d1321] border border-slate-800 rounded-lg">
+                    <div class="flex flex-col">
+                        <span class="text-xs text-slate-200 font-bold">Bangun Ulang Mipmaps Massal</span>
+                        <span class="text-[10px] text-slate-500">Otomatis generate mipmaps pada semua tekstur</span>
+                    </div>
+                    <input type="checkbox" id="exportRebuildMipmaps" checked class="w-4 h-4 accent-orange-500">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2.5 pt-2">
+                <button id="closeExportModalBtn" class="bg-slate-800 hover:bg-slate-750 text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition">
+                    Batal
+                </button>
+                <button id="downloadTxdBtn" class="bg-gradient-to-r from-orange-600 to-amber-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition shadow-md flex items-center gap-1.5">
+                    <i data-lucide="download"></i> Ekspor & Unduh .TXD
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifikasi -->
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 bg-slate-900 border border-slate-800 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 z-50">
+        <div id="toastIcon" class="p-1 rounded-full text-white"></div>
+        <span id="toastMsg" class="text-sm font-medium">Informasi</span>
+    </div>
+
+    
+    <script src="script.js"></script>
+</body>
+</html>
